@@ -1,58 +1,58 @@
-#include <Arduino.h>
+// #include <Arduino.h>
 
-// put function declarations here:
-const int LED_RED = 5;
-// const int BUTTON = 7; 
-int val = 0;
-int i = 0;
-
-
-
-void setup() {
-  pinMode(LED_RED, OUTPUT);
-  // pinMode(BUTTON, INPUT);
-}
+// // put function declarations here:
+// const int LED_RED = 5;
+// // const int BUTTON = 7; 
+// int val = 0;
+// int i = 0;
 
 
 
-void loop() {
+// void setup() {
+//   pinMode(LED_RED, OUTPUT);
+//   // pinMode(BUTTON, INPUT);
+// }
 
 
-  // // // LED SWITCH
+
+// void loop() {
+
+
+//   // // // LED SWITCH
   
   
-  // // OUR SOLUTION
-  // digitalWrite(LED_RED, LOW);
+//   // // OUR SOLUTION
+//   // digitalWrite(LED_RED, LOW);
   
-  // if (digitalRead(BUTTON)){
-  //   digitalWrite(LED_RED, HIGH);
-  // }
+//   // if (digitalRead(BUTTON)){
+//   //   digitalWrite(LED_RED, HIGH);
+//   // }
 
-  // // Professor
+//   // // Professor
 
-  // val = digitalRead(BUTTON);
+//   // val = digitalRead(BUTTON);
 
-  // if(val == HIGH){
-  //   digitalWrite(LED_RED, HIGH);
-  // }
-  // else{
-  //   digitalWrite(LED_RED, LOW);
-  // }
+//   // if(val == HIGH){
+//   //   digitalWrite(LED_RED, HIGH);
+//   // }
+//   // else{
+//   //   digitalWrite(LED_RED, LOW);
+//   // }
 
-  // // // PWM
+//   // // // PWM
 
-  // // OUR SOLUTION
+//   // // OUR SOLUTION
 
-  // for(i = 0; i < 255; i++){
-  //   analogWrite(LED_RED, i);
-  //   delay(10);
-  // }
-  // for(i = 255; i > 0; i--){
+//   // for(i = 0; i < 255; i++){
+//   //   analogWrite(LED_RED, i);
+//   //   delay(10);
+//   // }
+//   // for(i = 255; i > 0; i--){
 
-  //   analogWrite(LED_RED, i);
-  //   delay(10);  
-  // }
+//   //   analogWrite(LED_RED, i);
+//   //   delay(10);  
+//   // }
 
 
 
-}
+// }
