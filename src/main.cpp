@@ -80,7 +80,7 @@ void setup() {
   Serial.println("Starting TFT");
 
   // Button setup
-  pinMode(gameStartButton, INPUT_PULLUP); // Use internal pull-up resistor  
+  pinMode(gameStartButton, INPUT_PULLUP); // Use internal pull-up resistor
 
   // Initialize TFT
   tft.begin();
@@ -127,10 +127,14 @@ void showQuestion(int roundCounter){
 
 void evalAnswerA(int score){
   scoreTeamA += score * questionValue[roundCounter];
+  Serial.print("Team A score: ");
+  Serial.println(scoreTeamA);
 }
 
 void evalAnswerB(int score){
   scoreTeamB += score * questionValue[roundCounter];
+  Serial.print("Team B score: ");
+  Serial.println(scoreTeamB);
 }
 
 void evalAnswer(int score, bool isTeamA, bool isTeamB){
@@ -143,37 +147,37 @@ void evalAnswer(int score, bool isTeamA, bool isTeamB){
 
 void readAnswer(){
   int analogValueA = analogRead(A0); 
-  if (analogValueA >950){
+  if (analogValueA >950 && answerTeamA == false && analogValueA < 1023){
     evalAnswerA(2);
     answerTeamA = true;
-  }else if (analogValueA < 750 && analogValueA > 500){
+  }else if (analogValueA < 750 && analogValueA > 500 && answerTeamA == false){
     evalAnswerA(1);
     answerTeamA = true;
-  } else if (analogValueA < 500 && analogValueA > 350){
+  } else if (analogValueA < 500 && analogValueA > 350 && answerTeamA == false){
     evalAnswerA(0);
     answerTeamA = true;
-  } else if (analogValueA < 350 && analogValueA > 200){
+  } else if (analogValueA < 350 && analogValueA > 200 && answerTeamA == false){
     evalAnswerA(-1);
     answerTeamA = true;
-  } else if (analogValueA < 200 && analogValueA > 50){
+  } else if (analogValueA < 200 && analogValueA > 50 && answerTeamA == false){
     evalAnswerA(-2);
     answerTeamA = true;
   }
 
   int analogValueB = analogRead(A1);
-  if (analogValueB >950){
+  if (analogValueB >950 && analogValueB < 1023 && answerTeamB == false){
     evalAnswerB(2);
     answerTeamB = true;
-  } else if (analogValueB < 750 && analogValueB > 500){
+  } else if (analogValueB < 750 && analogValueB > 500 && answerTeamB == false){
     evalAnswerB(1);
     answerTeamB = true;
-  } else if (analogValueB < 500 && analogValueB > 350){
+  } else if (analogValueB < 500 && analogValueB > 350 && answerTeamB == false){
     evalAnswerB(0);
     answerTeamB = true;
-  } else if (analogValueB < 350 && analogValueB > 200){
+  } else if (analogValueB < 350 && analogValueB > 200 && answerTeamB == false){
     evalAnswerB(-1);
     answerTeamB = true;
-  } else if (analogValueB < 200 && analogValueB > 50){
+  } else if (analogValueB < 200 && analogValueB > 50 && answerTeamB == false){
     evalAnswerB(-2);
     answerTeamB = true;
   }
@@ -201,36 +205,45 @@ void evaluateResult(){
 // 🔄 Main Loop
 // =============================
 void loop() {
+  static bool lastButtonState = HIGH;
+  static unsigned long lastDebounceTime = 0;
+  const unsigned long debounceDelay = 50; // 50 ms debounce
+
   switch (gameState) {
-    case WAIT_START:
-      tft.fillScreen(ILI9341_BLACK);
-      tft.setCursor(0, 0);
-      tft.print("Ready to start!");
-      tft.setCursor(0, 30);
-      tft.print("Press button to start");
+  case WAIT_START: {
+  static bool drawn = false;
+  static unsigned long buttonPressStart = 0;
+  static bool buttonHeld = false;
+  if (!drawn) {
+    tft.fillScreen(ILI9341_BLACK);
+    tft.setCursor(0, 0);
+    tft.print("Ready to start!");
+    tft.setCursor(0, 30);
+    tft.print("Hold button 1s to start");
+    drawn = true;
+  }
 
-      // Debounce variables
-      static unsigned long lastDebounceTime = 0;
-      const unsigned long debounceDelay = 50; // 50 ms debounce
-      bool buttonPressed = false;
+  int reading = digitalRead(gameStartButton);
 
-      // Wait for button press with debounce
-      while (!buttonPressed) {
-        if (digitalRead(gameStartButton) == LOW) { // Assuming INPUT_PULLUP
-          if ((millis() - lastDebounceTime) > debounceDelay) {
-            buttonPressed = true;
-          }
-        } else {
-          lastDebounceTime = millis();
-        }
-      }
-      // Wait for button release (optional, for better UX)
-      while (digitalRead(gameStartButton) == LOW) {}
-
+  if (reading == HIGH) {
+    if (!buttonHeld) {
+      buttonPressStart = millis();
+      buttonHeld = true;
+    } else if (millis() - buttonPressStart >= 1000) {
+      Serial.println("✅ Button held for 1 second, starting game!");
       gameStart();
       roundCounter = 0;
       gameState = SHOW_QUESTION;
-      break;
+      drawn = false;
+      buttonHeld = false;
+      // Wait for button release to avoid accidental retrigger
+      while (digitalRead(gameStartButton) == LOW) { delay(10); }
+    }
+  } else {
+    buttonHeld = false;
+  }
+  break;
+}
 
     case SHOW_QUESTION:
       showQuestion(roundCounter);
@@ -242,7 +255,7 @@ void loop() {
 
     case WAIT_ANSWER:
       readAnswer();
-      if ((answerTeamA || answerTeamB) || (millis() - stateStartTime > questionTime)) {
+      if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
         gameState = SHOW_RESULT;
         stateStartTime = millis();
       }
