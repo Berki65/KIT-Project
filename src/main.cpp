@@ -34,6 +34,16 @@ const int totalRounds = 5; // Change to 10 for full game
 
 
 // =============================
+// GameState Enum
+// =============================
+enum GameState { WAIT_START, SHOW_QUESTION, WAIT_ANSWER, SHOW_RESULT, GAME_OVER };
+GameState gameState = WAIT_START;
+unsigned long stateStartTime = 0;
+const unsigned long questionTime = 10000; // 10 seconds per question
+const unsigned long resultTime = 2000;    // 2 seconds to show result
+
+
+// =============================
 // 📝 Questions Array
 // =============================
 String allQuestions[10] = {
@@ -69,6 +79,9 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Starting TFT");
 
+  // Button setup
+  pinMode(gameStartButton, INPUT_PULLUP); // Use internal pull-up resistor  
+
   // Initialize TFT
   tft.begin();
   tft.setRotation(1);
@@ -83,6 +96,7 @@ void setup() {
   tft.print("Ready to start!");
   tft.setCursor(0, 30);
   tft.print("Press button to start");
+  
 }
 
 // =============================
@@ -187,35 +201,73 @@ void evaluateResult(){
 // 🔄 Main Loop
 // =============================
 void loop() {
-  if(roundCounter < totalRounds){
-    // Display current question
-    tft.fillScreen(ILI9341_BLACK);
-    tft.setCursor(0, 0);
-    tft.print(allQuestions[roundCounter]);
+  switch (gameState) {
+    case WAIT_START:
+      tft.fillScreen(ILI9341_BLACK);
+      tft.setCursor(0, 0);
+      tft.print("Ready to start!");
+      tft.setCursor(0, 30);
+      tft.print("Press button to start");
 
-    // Process inputs (example: give points to both)
-    if(answerTeamA) scoreTeamA++;
-    if(answerTeamB) scoreTeamB++;
+      // Debounce variables
+      static unsigned long lastDebounceTime = 0;
+      const unsigned long debounceDelay = 50; // 50 ms debounce
+      bool buttonPressed = false;
 
-    // Debug print
-    Serial.print("Round "); Serial.print(roundCounter + 1);
-    Serial.print(" | TeamA: "); Serial.print(scoreTeamA);
-    Serial.print(" | TeamB: "); Serial.println(scoreTeamB);
+      // Wait for button press with debounce
+      while (!buttonPressed) {
+        if (digitalRead(gameStartButton) == LOW) { // Assuming INPUT_PULLUP
+          if ((millis() - lastDebounceTime) > debounceDelay) {
+            buttonPressed = true;
+          }
+        } else {
+          lastDebounceTime = millis();
+        }
+      }
+      // Wait for button release (optional, for better UX)
+      while (digitalRead(gameStartButton) == LOW) {}
 
-    // Next round
-    roundCounter++;
-    delay(1000); // Delay before next question
-  } 
-  else {
-    // Game finished
-    tft.fillScreen(ILI9341_BLACK);
-    tft.setCursor(0, 0);
-    tft.print("Game Over");
-    tft.setCursor(0, 30);
-    tft.print("Team A: "); tft.print(scoreTeamA);
-    tft.setCursor(0, 60);
-    tft.print("Team B: "); tft.print(scoreTeamB);
+      gameStart();
+      roundCounter = 0;
+      gameState = SHOW_QUESTION;
+      break;
 
-    while(1); // Stop loop
+    case SHOW_QUESTION:
+      showQuestion(roundCounter);
+      answerTeamA = false;
+      answerTeamB = false;
+      stateStartTime = millis();
+      gameState = WAIT_ANSWER;
+      break;
+
+    case WAIT_ANSWER:
+      readAnswer();
+      if ((answerTeamA || answerTeamB) || (millis() - stateStartTime > questionTime)) {
+        gameState = SHOW_RESULT;
+        stateStartTime = millis();
+      }
+      break;
+
+    case SHOW_RESULT:
+      evaluateResult();
+      delay(500); // Short pause for display update
+      roundCounter++;
+      if (roundCounter >= totalRounds) {
+        gameState = GAME_OVER;
+      } else {
+        gameState = SHOW_QUESTION;
+      }
+      break;
+
+    case GAME_OVER:
+      tft.fillScreen(ILI9341_BLACK);
+      tft.setCursor(0, 0);
+      tft.print("Game Over");
+      tft.setCursor(0, 30);
+      tft.print("Team A: "); tft.print(scoreTeamA);
+      tft.setCursor(0, 60);
+      tft.print("Team B: "); tft.print(scoreTeamB);
+      while (1); // Stop loop
+      break;
   }
 }
