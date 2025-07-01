@@ -31,8 +31,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 // 🎮 Game Constants
 // =============================
 const int totalRounds = 5; // Change to 10 for full game
-const int buttonPinA = 2;  // Team A button
-const int buttonPinB = 3;  // Team B button
+
 
 // =============================
 // 📝 Questions Array
@@ -49,6 +48,8 @@ String allQuestions[10] = {
   "Question 9",
   "Question 10"
 };
+
+int questionValue[10] ={2,1,4,2,4,5,1,5,5,2};
 
 // =============================
 // 🔧 Game Variables
@@ -77,13 +78,11 @@ void setup() {
 
   Serial.println("TFT initialized");
 
-  // Initialize buttons
-  pinMode(buttonPinA, INPUT_PULLUP);
-  pinMode(buttonPinB, INPUT_PULLUP);
-
   // Show initial screen
   tft.setCursor(0, 0);
   tft.print("Ready to start!");
+  tft.setCursor(0, 30);
+  tft.print("Press button to start");
 }
 
 // =============================
@@ -95,46 +94,94 @@ void gameStart(){
   scoreTeamA = 0;
   scoreTeamB = 0;
 }
+void visualStart(){
+  // Show start screen
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setCursor(0, 0);
+  tft.print("Game Started!");
+  delay(1000); // Show for a second
+}
+
+void showQuestion(int roundCounter){
+  // Show current question
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setCursor(0, 0);
+  tft.print(allQuestions[roundCounter]);
+  tft.setCursor(0, 30);
+  tft.print("Input your answer!");
+}
 
 void evalAnswerA(int score){
-
+  scoreTeamA += score * questionValue[roundCounter];
 }
 
-void evalAnswerB(){
-
+void evalAnswerB(int score){
+  scoreTeamB += score * questionValue[roundCounter];
 }
 
-int readAnswer(){
+void evalAnswer(int score, bool isTeamA, bool isTeamB){
+  if(isTeamA){
+    evalAnswerA(score);
+  } else {
+    evalAnswerB(score);
+  }
+}
 
+void readAnswer(){
   int analogValueA = analogRead(A0); 
-
   if (analogValueA >950){
     evalAnswerA(2);
+    answerTeamA = true;
   }else if (analogValueA < 750 && analogValueA > 500){
     evalAnswerA(1);
+    answerTeamA = true;
   } else if (analogValueA < 500 && analogValueA > 350){
     evalAnswerA(0);
+    answerTeamA = true;
   } else if (analogValueA < 350 && analogValueA > 200){
     evalAnswerA(-1);
+    answerTeamA = true;
   } else if (analogValueA < 200 && analogValueA > 50){
     evalAnswerA(-2);
-  } 
-
+    answerTeamA = true;
+  }
 
   int analogValueB = analogRead(A1);
   if (analogValueB >950){
-    evalAnswerB();
+    evalAnswerB(2);
+    answerTeamB = true;
   } else if (analogValueB < 750 && analogValueB > 500){
-    evalAnswerB();
+    evalAnswerB(1);
+    answerTeamB = true;
   } else if (analogValueB < 500 && analogValueB > 350){
-    evalAnswerB();
+    evalAnswerB(0);
+    answerTeamB = true;
   } else if (analogValueB < 350 && analogValueB > 200){
-    evalAnswerB();
+    evalAnswerB(-1);
+    answerTeamB = true;
   } else if (analogValueB < 200 && analogValueB > 50){
-    evalAnswerB();
+    evalAnswerB(-2);
+    answerTeamB = true;
   }
+}
 
-  return 0;
+void evaluateResult(){
+  // Display scores
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setCursor(0, 0);
+  tft.print("Team A: ");
+  tft.print(scoreTeamA);
+  tft.setCursor(0, 30);
+  tft.print("Team B: ");
+  tft.print(scoreTeamB);
+
+  // Wait for a while before next round
+  delay(2000);
+  
+  // Reset answers for next round
+  answerTeamA = false;
+  answerTeamB = false;
+
 }
 // =============================
 // 🔄 Main Loop
@@ -145,14 +192,6 @@ void loop() {
     tft.fillScreen(ILI9341_BLACK);
     tft.setCursor(0, 0);
     tft.print(allQuestions[roundCounter]);
-
-    // Wait for Team A input
-    while(digitalRead(buttonPinA) == HIGH);
-    answerTeamA = true;
-
-    // Wait for Team B input
-    while(digitalRead(buttonPinB) == HIGH);
-    answerTeamB = true;
 
     // Process inputs (example: give points to both)
     if(answerTeamA) scoreTeamA++;
