@@ -53,11 +53,11 @@ const unsigned long resultTime = 2000;    // 2 seconds to show result
 // 📝 Questions Array
 // =============================
 String allQuestions[10] = {
-  "Question 1",
-  "Question 2",
-  "Question 3",
-  "Question 4",
-  "Question 5",
+  "How do you prefer to recharge your energy – alone or with others?",
+  "How do you make important decisions – based on logic or feelings?",
+  "Do you prefer planning things in advance or staying flexible?",
+  "What do you focus on more in life – facts and reality, or ideas and possibilities?",
+  "When you're in conflict, do you want to talk immediately or take space first?",
   "Question 6",
   "Question 7",
   "Question 8",
@@ -76,6 +76,9 @@ int scoreTeamB = 0;
 
 bool answerTeamA = false;
 bool answerTeamB = false;
+
+// Store if answers matched for each round
+bool answersMatched[10] = {false};
 
 // =============================
 // 🚀 Setup Function
@@ -199,14 +202,6 @@ void evalAnswerB(int score){
   Serial.println(scoreTeamB);
 }
 
-void evalAnswer(int score, bool isTeamA, bool isTeamB){
-  if(isTeamA){
-    evalAnswerA(score);
-  } else {
-    evalAnswerB(score);
-  }
-}
-
 void readAnswer(){
   int analogValueA = analogRead(A0); 
   if (analogValueA >950 && answerTeamA == false && analogValueA < 1023){
@@ -313,7 +308,7 @@ void loop() {
       showQuestion(roundCounter);
       answerTeamA = false;
       answerTeamB = false;
-      stateStartTime = millis();
+      // stateStartTime = millis();
       gameState = WAIT_ANSWER;
       break;
 
@@ -321,12 +316,13 @@ void loop() {
       readAnswer();
       if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
         gameState = SHOW_RESULT;
-        stateStartTime = millis();
+        // stateStartTime = millis();
       }
       break;
 
     case SHOW_RESULT:
-      evaluateResult();
+      // Store if answers matched for this round
+      answersMatched[roundCounter] = (answerTeamA == answerTeamB);
       delay(500); // Short pause for display update
       roundCounter++;
       if (roundCounter >= totalRounds) {
@@ -341,10 +337,18 @@ void loop() {
       tft.setCursor(0, 0);
       tft.print("Game Over");
       tft.setCursor(0, 30);
-      tft.print("Team A: "); tft.print(scoreTeamA);
-      tft.setCursor(0, 60);
-      tft.print("Team B: "); tft.print(scoreTeamB);
+      for (int i = 0; i < totalRounds; i++) {
+        tft.print("R"); tft.print(i+1); tft.print(": ");
+        if (answersMatched[i]) {
+          tft.print("Match");
+        } else {
+          tft.print("No Match");
+        }
+        tft.setCursor(0, 30 + (i+1)*20);
+      }
       while (1); // Stop loop
       break;
   }
 }
+
+
