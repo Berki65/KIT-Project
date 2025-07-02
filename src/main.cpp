@@ -93,7 +93,7 @@ void setup() {
 
   // Initialize TFT
   tft.begin();
-  tft.setRotation(1);
+  tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
@@ -309,7 +309,7 @@ void loop() {
       answerTeamA = false;
       answerTeamB = false;
       // stateStartTime = millis();
-      gameState = WAIT_ANSWER;
+      // gameState = WAIT_ANSWER;
       break;
 
     case WAIT_ANSWER:
@@ -334,17 +334,18 @@ void loop() {
 
     case GAME_OVER:
       tft.fillScreen(ILI9341_BLACK);
+      tft.setTextSize(2); // Ensure readable font size
       tft.setCursor(0, 0);
       tft.print("Game Over");
-      tft.setCursor(0, 30);
       for (int i = 0; i < totalRounds; i++) {
+        int y = 30 + i * 24; // 24 pixels per line for size 2
+        tft.setCursor(0, y);
         tft.print("R"); tft.print(i+1); tft.print(": ");
         if (answersMatched[i]) {
           tft.print("Match");
         } else {
           tft.print("No Match");
         }
-        tft.setCursor(0, 30 + (i+1)*20);
       }
       while (1); // Stop loop
       break;
