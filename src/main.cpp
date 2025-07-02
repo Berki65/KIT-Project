@@ -5,27 +5,33 @@
 // =============================
 // 🖥 TFT Display Pin Definitions
 // =============================
-#define TFT_CS   8
-#define TFT_DC   10
-#define TFT_RST  9
+#define TFT_CS   8 // Chip Select pin for TFT
+#define TFT_DC   10 // Data/Command pin for TFT
+#define TFT_RST  9 // Reset pin for TFT
 
 // =============================
 // 💡 LED Pin Definitions
 // =============================
-const int LED_RGB_A_R = 1; // Red LED pin for Team A
-const int LED_RGB_A_G = 2; // Green LED pin for Team A
-const int LED_RGB_A_B = 3; // Blue LED pin for Team A
+#define LED_RGB_A_R 1 // Red LED pin for Team A
+#define LED_RGB_A_G 2 // Green LED pin for Team A
+#define LED_RGB_A_B 3 // Blue LED pin for Team A
+#define LED_RGB_B_R 4 // Red LED pin for Team B
+#define LED_RGB_B_G 5 // Green LED pin for Team B
+#define LED_RGB_B_B 6 // Blue LED pin for Team B
 
-const int LED_RGB_B_R = 4; // Red LED pin for Team B
-const int LED_RGB_B_G = 5; // Green LED pin for Team B
-const int LED_RGB_B_B = 6; // Blue LED pin for Team B
+uint8_t r,g,b,r2,g2,b2; // RGB values for LEDs
+
+// =============================
+// Buzzer Pin Definition
+// =============================
+#define BUZZER_PIN 7 // Buzzer pin for sound effects
 
 // =============================
 // 🔘 Button Pin Definition
 // =============================
 const int gameStartButton = 12; // Button to start the game
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST); // Create TFT display object
 
 // =============================
 // 🎮 Game Constants
@@ -36,9 +42,9 @@ const int totalRounds = 5; // Change to 10 for full game
 // =============================
 // GameState Enum
 // =============================
-enum GameState { WAIT_START, SHOW_QUESTION, WAIT_ANSWER, SHOW_RESULT, GAME_OVER };
-GameState gameState = WAIT_START;
-unsigned long stateStartTime = 0;
+enum GameState { WAIT_START, SHOW_QUESTION, WAIT_ANSWER, SHOW_RESULT, GAME_OVER }; // Define game states
+GameState gameState = WAIT_START; // Initialize game state
+unsigned long stateStartTime = 0; // Variable to track time in current state
 const unsigned long questionTime = 10000; // 10 seconds per question
 const unsigned long resultTime = 2000;    // 2 seconds to show result
 
@@ -114,6 +120,20 @@ void visualStart(){
   tft.setCursor(0, 0);
   tft.print("Game Started!");
   delay(1000); // Show for a second
+}
+
+void LedOnStart(){
+  // Turn on LEDs for both teams
+  r = 255; g = 0; b = 0; // Team A Red
+  r2 = 255; g2 = 0; b2 = 0; // Team B Green
+
+  analogWrite(LED_RGB_A_R, r);
+  analogWrite(LED_RGB_A_G, g);
+  analogWrite(LED_RGB_A_B, b);
+  
+  analogWrite(LED_RGB_B_R, r2);
+  analogWrite(LED_RGB_B_G, g2);
+  analogWrite(LED_RGB_B_B, b2);
 }
 
 void showQuestion(int roundCounter){
@@ -205,15 +225,13 @@ void evaluateResult(){
 // 🔄 Main Loop
 // =============================
 void loop() {
-  static bool lastButtonState = HIGH;
-  static unsigned long lastDebounceTime = 0;
-  const unsigned long debounceDelay = 50; // 50 ms debounce
 
   switch (gameState) {
   case WAIT_START: {
   static bool drawn = false;
   static unsigned long buttonPressStart = 0;
   static bool buttonHeld = false;
+  LedOnStart();
   if (!drawn) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setCursor(0, 0);
