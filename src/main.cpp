@@ -53,16 +53,16 @@ const unsigned long resultTime = 2000;    // 2 seconds to show result
 // 📝 Questions Array
 // =============================
 String allQuestions[10] = {
-  "How do you prefer to recharge your energy – alone or with others?",
-  "How do you make important decisions – based on logic or feelings?",
+  "How do you prefer to recharge your energy alone or with others?",
+  "How do you make important decisions  based on logic or feelings?",
   "Do you prefer planning things in advance or staying flexible?",
-  "What do you focus on more in life – facts and reality, or ideas and possibilities?",
+  "What do you focus on more in life  facts and reality, or ideas and possibilities?",
   "When you're in conflict, do you want to talk immediately or take space first?",
-  "Question 6",
-  "Question 7",
-  "Question 8",
-  "Question 9",
-  "Question 10"
+  "After a Long day, do you feel best when you can spend time alone?",
+  "⁠Do you usually think things through in your head before speaking?",
+  "Do you prefer to observe and analyze before jumping into a discussion?",
+  "Are you more interested in what could be than in what is?",
+  "Do you tend to leave tasks until the last minute and then solve them creatively  "
 };
 
 int questionValue[10] ={2,1,4,2,4,5,1,5,5,2};
@@ -161,7 +161,7 @@ void LedWaitStart() {
 
     analogWrite(LED_RGB_B_R, r2);
     analogWrite(LED_RGB_B_G, g2);
-    analogWrite(LED_RGB_B_B, b2);
+    analogWrite(LED_RGB_B_B, b2); 
   }
 }
 // =============================
@@ -178,15 +178,21 @@ void buzzerStart(){
   noTone(BUZZER_PIN);
 }
 
+void buzzerAnswer(){
+  // Play a short sound for answer evaluation
+  tone(BUZZER_PIN, 1000, 200); // 1kHz for 200ms
+  delay(200);
+  noTone(BUZZER_PIN);
+}
+
 // =============================
 // 📝 Question Display and Evaluation Functions
 // =============================
 void showQuestion(int roundCounter){
-  // Show current question
   tft.fillScreen(ILI9341_BLACK);
   tft.setCursor(0, 0);
-  tft.print(allQuestions[roundCounter]);
-  tft.setCursor(0, 30);
+  tft.println(allQuestions[roundCounter]);
+  tft.setCursor(0, 200);
   tft.print("Input your answer!");
 }
 
@@ -203,42 +209,53 @@ void evalAnswerB(int score){
 }
 
 void readAnswer(){
-  int analogValueA = analogRead(A0); 
+  int analogValueA = analogRead(A1); 
   if (analogValueA >950 && answerTeamA == false && analogValueA < 1023){
     evalAnswerA(2);
+    buzzerAnswer(); // Play sound for answer evaluation
     answerTeamA = true;
   }else if (analogValueA < 750 && analogValueA > 500 && answerTeamA == false){
     evalAnswerA(1);
     answerTeamA = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueA < 500 && analogValueA > 350 && answerTeamA == false){
     evalAnswerA(0);
     answerTeamA = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueA < 350 && analogValueA > 200 && answerTeamA == false){
     evalAnswerA(-1);
     answerTeamA = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueA < 200 && analogValueA > 50 && answerTeamA == false){
     evalAnswerA(-2);
     answerTeamA = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   }
 
-  int analogValueB = analogRead(A1);
+  int analogValueB = analogRead(A2);
   if (analogValueB >950 && analogValueB < 1023 && answerTeamB == false){
     evalAnswerB(2);
     answerTeamB = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueB < 750 && analogValueB > 500 && answerTeamB == false){
     evalAnswerB(1);
     answerTeamB = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueB < 500 && analogValueB > 350 && answerTeamB == false){
     evalAnswerB(0);
     answerTeamB = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueB < 350 && analogValueB > 200 && answerTeamB == false){
     evalAnswerB(-1);
     answerTeamB = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   } else if (analogValueB < 200 && analogValueB > 50 && answerTeamB == false){
     evalAnswerB(-2);
     answerTeamB = true;
+    buzzerAnswer(); // Play sound for answer evaluation
   }
 }
+
 
 void evaluateResult(){
   // Display scores
@@ -308,17 +325,16 @@ void loop() {
       showQuestion(roundCounter);
       answerTeamA = false;
       answerTeamB = false;
-      // stateStartTime = millis();
-      // gameState = WAIT_ANSWER;
+      stateStartTime = millis(); // add this line to record start time
+      gameState = WAIT_ANSWER;
       break;
 
-    case WAIT_ANSWER:
-      readAnswer();
-      if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
-        gameState = SHOW_RESULT;
-        // stateStartTime = millis();
-      }
-      break;
+case WAIT_ANSWER:
+  readAnswer();
+  if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
+    gameState = SHOW_RESULT;
+  }
+  break;
 
     case SHOW_RESULT:
       // Store if answers matched for this round
