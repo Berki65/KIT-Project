@@ -121,21 +121,63 @@ void visualStart(){
   tft.print("Game Started!");
   delay(1000); // Show for a second
 }
-
-void LedOnStart(){
-  // Turn on LEDs for both teams
-  r = 255; g = 0; b = 0; // Team A Red
-  r2 = 255; g2 = 0; b2 = 0; // Team B Green
-
-  analogWrite(LED_RGB_A_R, r);
-  analogWrite(LED_RGB_A_G, g);
-  analogWrite(LED_RGB_A_B, b);
-  
-  analogWrite(LED_RGB_B_R, r2);
-  analogWrite(LED_RGB_B_G, g2);
-  analogWrite(LED_RGB_B_B, b2);
+// =============================
+// 💡 LED Functions
+// =============================
+void clearLED() {
+  // Turn off all LEDs
+  analogWrite(LED_RGB_A_R, 0);
+  analogWrite(LED_RGB_A_G, 0);
+  analogWrite(LED_RGB_A_B, 0);
+  analogWrite(LED_RGB_B_R, 0);
+  analogWrite(LED_RGB_B_G, 0);
+  analogWrite(LED_RGB_B_B, 0);
 }
 
+void LedWaitStart() {
+  // Simple RGB animation: cycle through colors for both teams
+  static uint8_t phase = 0;
+  static unsigned long lastUpdate = 0;
+  const unsigned long interval = 30; // ms between color changes
+
+  if (millis() - lastUpdate > interval) {
+    lastUpdate = millis();
+    phase++;
+    // Animate Team A (RGB)
+    r = (sin(phase * 0.07) * 127) + 128;
+    g = (sin(phase * 0.07 + 2.1) * 127) + 128;
+    b = (sin(phase * 0.07 + 4.2) * 127) + 128;
+    // Animate Team B (RGB, phase shifted)
+    r2 = (sin(phase * 0.07 + 1.05) * 127) + 128;
+    g2 = (sin(phase * 0.07 + 3.15) * 127) + 128;
+    b2 = (sin(phase * 0.07 + 5.25) * 127) + 128;
+
+    analogWrite(LED_RGB_A_R, r);
+    analogWrite(LED_RGB_A_G, g);
+    analogWrite(LED_RGB_A_B, b);
+
+    analogWrite(LED_RGB_B_R, r2);
+    analogWrite(LED_RGB_B_G, g2);
+    analogWrite(LED_RGB_B_B, b2);
+  }
+}
+// =============================
+
+// =============================
+// 🔊 Buzzer Functions
+// =============================
+void buzzerStart(){
+  // Play a fast pitch-up sound on the buzzer
+  for (int freq = 400; freq <= 1200; freq += 40) {
+    tone(BUZZER_PIN, freq, 30);
+    delay(20);
+  }
+  noTone(BUZZER_PIN);
+}
+
+// =============================
+// 📝 Question Display and Evaluation Functions
+// =============================
 void showQuestion(int roundCounter){
   // Show current question
   tft.fillScreen(ILI9341_BLACK);
@@ -222,6 +264,8 @@ void evaluateResult(){
 
 }
 // =============================
+
+// =============================
 // 🔄 Main Loop
 // =============================
 void loop() {
@@ -231,7 +275,7 @@ void loop() {
   static bool drawn = false;
   static unsigned long buttonPressStart = 0;
   static bool buttonHeld = false;
-  LedOnStart();
+  // LedWaitStart();
   if (!drawn) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setCursor(0, 0);
@@ -250,6 +294,8 @@ void loop() {
     } else if (millis() - buttonPressStart >= 1000) {
       Serial.println("✅ Button held for 1 second, starting game!");
       gameStart();
+      clearLED(); // Clear LEDs
+      buzzerStart(); // Play start sound
       roundCounter = 0;
       gameState = SHOW_QUESTION;
       drawn = false;
