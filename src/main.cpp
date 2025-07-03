@@ -189,6 +189,41 @@ void ledTeamB() {
   analogWrite(LED_RGB_B_B, 0);
 }
 
+void ledBlinkMatch() {
+  // Blink both teams' LEDs to indicate a match
+  for (int i = 0; i < 11; i++) {
+    analogWrite(LED_RGB_A_R, 0);
+    analogWrite(LED_RGB_A_G, 255);
+    analogWrite(LED_RGB_A_B, 0);
+    
+    analogWrite(LED_RGB_B_R, 0);
+    analogWrite(LED_RGB_B_G, 255);
+    analogWrite(LED_RGB_B_B, 0);
+    
+    delay(500); // On for half a second
+
+    clearLED(); // Turn off LEDs
+    delay(500); // Off for half a second
+  }
+}
+
+  void ledBlinkNoMatch(){
+  for (int i = 0; i < 11; i++) {
+      analogWrite(LED_RGB_A_R, 255);
+    analogWrite(LED_RGB_A_G, 0);
+    analogWrite(LED_RGB_A_B, 0);
+    
+    analogWrite(LED_RGB_B_R, 255);
+    analogWrite(LED_RGB_B_G, 0);
+    analogWrite(LED_RGB_B_B, 0);
+    
+    delay(500); // On for half a second
+
+    clearLED(); // Turn off LEDs
+    delay(500); // Off for half a second
+   } 
+}
+
 void DuringQuestion() {
   static uint8_t phase = 0;
   static unsigned long lastUpdate = 0;
@@ -548,10 +583,12 @@ case WAIT_ANSWER:
         tft.setCursor(0, 30);
         tft.print("Your score: ");
         tft.print(score);
+        ledBlinkMatch();
         while(1);
       }
       else{
         tft.print("You two are not a matching!");
+        ledBlinkNoMatch();
         while(1);
       }
 
