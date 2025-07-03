@@ -164,6 +164,104 @@ void LedWaitStart() {
     analogWrite(LED_RGB_B_B, b2); 
   }
 }
+
+void playTone(int freq, int duration) {
+  tone(BUZZER_PIN, freq);  // 周波数で鳴らす
+  delay(duration);         // 指定時間だけ待つ
+  noTone(BUZZER_PIN);      // 音を止める
+  delay(50);               // 区切りの無音時間
+}
+
+void DuringQuestion() {
+  static uint8_t phase = 0;
+  static unsigned long lastUpdate = 0;
+  const unsigned long interval = 40;
+
+  if (millis() - lastUpdate > interval) {
+    lastUpdate = millis();
+    phase++;
+    
+    r = (sin(phase * 0.05) * 127) + 128;
+    g = (sin(phase * 0.05 + 2.0) * 127) + 128;
+    b = (sin(phase * 0.05 + 4.0) * 127) + 128;
+
+    r2 = (sin(phase * 0.05) * 127) + 128;
+    g2 = (sin(phase * 0.05 + 2.0) * 127) + 128;
+    b2 = (sin(phase * 0.05 + 4.0) * 127) + 128;
+
+    analogWrite(LED_RGB_A_R, r);
+    analogWrite(LED_RGB_A_G, g);
+    analogWrite(LED_RGB_A_B, b);
+
+    analogWrite(LED_RGB_B_R, r2);
+    analogWrite(LED_RGB_B_G, g2);
+    analogWrite(LED_RGB_B_B, b2);
+  }
+}
+
+void afterAnswer() {
+  
+  analogWrite(LED_RGB_A_R, 0);
+  analogWrite(LED_RGB_A_G, 0);
+  analogWrite(LED_RGB_A_B, 255);
+
+  analogWrite(LED_RGB_B_R, 0);
+  analogWrite(LED_RGB_B_G, 0);
+  analogWrite(LED_RGB_B_B, 255);
+
+  playTone(880, 100); // 明るい確認音
+  delay(150);
+  clearLED();
+}
+
+void showGameOver() {
+
+  analogWrite(LED_RGB_A_R, 255);
+  analogWrite(LED_RGB_A_G, 0);
+  analogWrite(LED_RGB_A_B, 0);
+
+  analogWrite(LED_RGB_B_R, 255);
+  analogWrite(LED_RGB_B_G, 0);
+  analogWrite(LED_RGB_B_B, 0);
+
+
+  // 悲しいメロディ
+  playTone(440, 250);
+  playTone(392, 250);
+  playTone(349, 350);
+  delay(100);
+  playTone(330, 500);
+  clearLED();
+
+}
+
+void setLEDGreen() {
+  analogWrite(LED_RGB_A_R, 0);
+  analogWrite(LED_RGB_A_G, 255);
+  analogWrite(LED_RGB_A_B, 0);
+
+  analogWrite(LED_RGB_B_R, 0);
+  analogWrite(LED_RGB_B_G, 255);
+  analogWrite(LED_RGB_B_B, 0);
+}
+
+void showRsults() {
+  // 緑点灯
+  setLEDGreen();
+
+  // 明るくポジティブなメロディ
+  playTone(659, 150);  // E5
+  playTone(784, 150);  // G5
+  playTone(880, 150);  // A5
+  playTone(1047, 250); // C6
+  delay(100);
+  playTone(880, 200);
+  playTone(1047, 300);
+
+  // 
+  clearLED();
+}
+
 // =============================
 
 // =============================
@@ -273,7 +371,6 @@ void evaluateResult(){
   // Reset answers for next round
   answerTeamA = false;
   answerTeamB = false;
-
 }
 // =============================
 
@@ -306,7 +403,7 @@ void loop() {
     } else if (millis() - buttonPressStart >= 1000) {
       Serial.println("✅ Button held for 1 second, starting game!");
       gameStart();
-      clearLED(); // Clear LEDs
+      clearLED(); // Clear LEDs.     
       buzzerStart(); // Play start sound
       roundCounter = 0;
       gameState = SHOW_QUESTION;
@@ -325,15 +422,20 @@ void loop() {
       showQuestion(roundCounter);
       answerTeamA = false;
       answerTeamB = false;
-      stateStartTime = millis(); // add this line to record start time
+      // stateStartTime = millis(); // add this line to record start time
       gameState = WAIT_ANSWER;
       break;
 
 case WAIT_ANSWER:
   readAnswer();
-  if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
-    gameState = SHOW_RESULT;
-  }
+  // if ((answerTeamA && answerTeamB) || (millis() - stateStartTime > questionTime)) {
+  //   gameState = SHOW_RESULT;
+  // }
+    if (answerTeamA && answerTeamB) {
+      gameState = SHOW_QUESTION;
+      answerTeamA = false; // Reset answers for next round
+      answerTeamB = false; // Reset answers for next round
+    }
   break;
 
     case SHOW_RESULT:
