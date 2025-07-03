@@ -12,12 +12,12 @@
 // =============================
 // 💡 LED Pin Definitions
 // =============================
-#define LED_RGB_A_R 4 // Red LED pin for Team A
-#define LED_RGB_A_G 5 // Green LED pin for Team A
-#define LED_RGB_A_B 6 // Blue LED pin for Team A
-#define LED_RGB_B_R 1 // Red LED pin for Team B
-#define LED_RGB_B_G 2 // Green LED pin for Team B
-#define LED_RGB_B_B 3 // Blue LED pin for Team B
+#define LED_RGB_A_R 1 // Red LED pin for Team A
+#define LED_RGB_A_G 2 // Green LED pin for Team A
+#define LED_RGB_A_B 3 // Blue LED pin for Team A
+#define LED_RGB_B_R 4 // Red LED pin for Team B
+#define LED_RGB_B_G 5 // Green LED pin for Team B
+#define LED_RGB_B_B 6 // Blue LED pin for Team B
 
 uint8_t r,g,b,r2,g2,b2; // RGB values for LEDs
 
@@ -117,7 +117,7 @@ void setup() {
 // =============================
 void gameStart(){
   // Reset variables for new game if needed
-  roundCounter = 0;
+  // roundCounter = 0;
   scoreTeamA = 0;
   scoreTeamB = 0;
 }
@@ -315,25 +315,23 @@ void checkAnswerButton(){
     // Both teams answered, evaluate results
     if (scoreTeamAButton == scoreTeamBButton) {
       score += 10; // Both teams matched
-      scoreTeamA += 0; // Reset scores for next round
-      scoreTeamB += 0; // Reset scores for next round
+      Serial.println("Both teams matched!");
     } else if (abs(scoreTeamAButton - scoreTeamBButton) == 1) {
       score += 8; // Close match
-      scoreTeamA += 0; // Reset scores for next round
-      scoreTeamB += 0; // Reset scores for next round
+      Serial.println("Close match!");
     } else if (abs(scoreTeamAButton - scoreTeamBButton) == 2) {
       score += 5; // Moderate match
-      scoreTeamA += 0; // Reset scores for next round
-      scoreTeamB += 0; // Reset scores for next round
+      Serial.println("Moderate match!");
     } else if (abs(scoreTeamAButton - scoreTeamBButton) == 3) {
       score += 3; // Distant match
-      scoreTeamA += 0; // Reset scores for next round
-      scoreTeamB += 0; // Reset scores for next round
+      Serial.println("Distant match!");
     } else {
       score += 0; // No match
-      scoreTeamA += 0; // Reset scores for next round
-      scoreTeamB += 0; // Reset scores for next round
+      Serial.println("No match!");
     }
+    // Reset for next round
+    scoreTeamAButton = 0;
+    scoreTeamBButton = 0;
   }
 }
 
@@ -352,13 +350,13 @@ void readAnswer(){
   if (analogValueA >950 && answerTeamA == false && analogValueA < 1023){
     buzzerAnswer(); // Play sound for answer evaluation
     answerTeamA = true;
-    setAnswerButtons(true, 5);
+    setAnswerButtons(true, 1);
     checkAnswerButton(); 
     ledTeamA(); // Turn on Team A LED
   }else if (analogValueA < 750 && analogValueA > 500 && answerTeamA == false){
     answerTeamA = true;
     buzzerAnswer(); // Play sound for answer evaluation
-    setAnswerButtons(true, 4);
+    setAnswerButtons(true, 2);
     checkAnswerButton(); 
     ledTeamA(); // Turn on Team A LED
   } else if (analogValueA < 500 && analogValueA > 350 && answerTeamA == false){
@@ -370,13 +368,13 @@ void readAnswer(){
   } else if (analogValueA < 350 && analogValueA > 200 && answerTeamA == false){
     answerTeamA = true;
     buzzerAnswer(); // Play sound for answer evaluation
-    setAnswerButtons(true, 2);
+    setAnswerButtons(true, 4);
     checkAnswerButton(); 
     ledTeamA(); // Turn on Team A LED
   } else if (analogValueA < 200 && analogValueA > 50 && answerTeamA == false){
     answerTeamA = true;
     buzzerAnswer(); // Play sound for answer evaluation
-    setAnswerButtons(true, 1);
+    setAnswerButtons(true, 5);
     checkAnswerButton(); 
     ledTeamA(); // Turn on Team A LED
   }
@@ -415,9 +413,6 @@ void readAnswer(){
   }
 }
 
-
-
-
 // void scoreInput(int buttonA, int buttonB) {
 //   if (buttonA == buttonB){
 //      score += 10;
@@ -452,6 +447,9 @@ void evaluateResult(){
   // Reset answers for next round
   answerTeamA = false;
   answerTeamB = false;
+
+  // Increment round counter
+  roundCounter++;
 }
 // =============================
 
@@ -465,9 +463,9 @@ void loop() {
   static bool drawn = false;
   static unsigned long buttonPressStart = 0;
   static bool buttonHeld = false;
-  setLEDGreen();
+  // setEDGreen();
   
-  // LedWaitStart();
+  LedWaitStart();
   if (!drawn) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setCursor(0, 0);
@@ -500,31 +498,35 @@ void loop() {
   break;
 }
 
-    case SHOW_QUESTION:
-      showQuestion(roundCounter);
-      clearLED(); // Clear LEDs
-      answerTeamA = false;
-      answerTeamB = false;
-      // stateStartTime = millis(); // add this line to record start time
-      gameState = WAIT_ANSWER;
-      break;
+case SHOW_QUESTION:
+  showQuestion(roundCounter);
+  clearLED();
+  answerTeamA = false;
+  answerTeamB = false;
+  scoreTeamAButton = 0;
+  scoreTeamBButton = 0;
+  gameState = WAIT_ANSWER;
+  break;
 
-  case WAIT_ANSWER:
-    readAnswer();
-      if (answerTeamA && answerTeamB) {
-        gameState = SHOW_QUESTION;
-        answerTeamA = false; // Reset answers for next round
-        answerTeamB = false; // Reset answers for next round
-      }
-    break;
+case WAIT_ANSWER:
+  readAnswer();
+  if (answerTeamA && answerTeamB) {
+    roundCounter++;
+    if (roundCounter >= totalRounds) {
+      gameState = GAME_OVER;
+    } else {
+      gameState = SHOW_QUESTION;
+    }
+    answerTeamA = false;
+    answerTeamB = false;
+  }
+  break;
 
     case SHOW_RESULT:
       // Store if answers matched for this round
       // answersMatched[roundCounter] = (answerTeamA == answerTeamB);
       tft.fillScreen(ILI9341_BLACK);
       delay(500); // Short pause for display update
-      
-      roundCounter++;
         answerTeamA = false; // Reset answers for next round
         answerTeamB = false; // Reset answers for next round
       if (roundCounter >= totalRounds) {
@@ -540,8 +542,12 @@ void loop() {
       tft.fillScreen(ILI9341_BLACK);
       tft.setTextSize(2); // Ensure readable font size
       tft.setCursor(0, 0);
-      if(score >= 66){
+      Serial.println(score);
+      if(score >= 35){
         tft.print("You two are a matching!");
+        tft.setCursor(0, 30);
+        tft.print("Your score: ");
+        tft.print(score);
         while(1);
       }
       else{
