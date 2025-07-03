@@ -53,26 +53,23 @@ const unsigned long resultTime = 2000;    // 2 seconds to show result
 // 📝 Questions Array
 // =============================
 String allQuestions[10] = {
-  "How do you prefer to recharge your energy alone or with others?",
-  "How do you make important decisions  based on logic or feelings?",
-  "Do you prefer planning things in advance or staying flexible?",
-  "What do you focus on more in life  facts and reality, or ideas and possibilities?",
-  "When you're in conflict, do you want to talk immediately or take space first?",
-  "After a Long day, do you feel best when you can spend time alone?",
-  "⁠Do you usually think things through in your head before speaking?",
-  "Do you prefer to observe and analyze before jumping into a discussion?",
-  "Are you more interested in what could be than in what is?",
-  "Do you tend to leave tasks until the last minute and then solve them creatively  "
+  "Being around people gives me lots of energy.",
+  "I always trust my head over my heart.",
+  "I like having a clear plan before doing anything.",
+  "I often think about how others are feeling.",
+  "I need alone time to feel recharged.",
+  "I prefer when someone tells me exactly what to do.",
+  "I notice tiny details that others miss.",
+  "I tell people what’s on my mind easily.",
+  "I’m cool with sudden changes in plans.",
+  "I love deep talks more than small talk."
 };
 
-int questionValue[10] ={2,1,4,2,4,5,1,5,5,2};
 
 // =============================
 // 🔧 Game Variables
 // =============================
 int roundCounter = 0;
-int scoreTeamA = 0;
-int scoreTeamB = 0;
 
 int scoreTeamAButton = 0;
 int scoreTeamBButton = 0;
@@ -118,8 +115,8 @@ void setup() {
 void gameStart(){
   // Reset variables for new game if needed
   // roundCounter = 0;
-  scoreTeamA = 0;
-  scoreTeamB = 0;
+  scoreTeamAButton = 0;
+  scoreTeamBButton = 0;
 }
 void visualStart(){
   // Show start screen
@@ -371,7 +368,6 @@ void checkAnswerButton(){
 }
 
 void setAnswerButtons(bool isA, int score) {
-
   if(isA){
     scoreTeamAButton += score;
   }
@@ -448,49 +444,6 @@ void readAnswer(){
   }
 }
 
-// void scoreInput(int buttonA, int buttonB) {
-//   if (buttonA == buttonB){
-//      score += 10;
-//   }
-//   else if(buttonA-buttonB == 1 || buttonA-buttonB == -1){
-//      score += 8;
-//   }
-//   else if(buttonA-buttonB == 2 || buttonA-buttonB == -2){
-//      score += 5;
-//   }
-//   else if(buttonA-buttonB == 3 || buttonA-buttonB == -3){
-//      score += 3;
-//   }
-//   else if(buttonA-buttonB == 4 || buttonA-buttonB == -4){
-//      score += 0;
-//   }
-// }
-
-void evaluateResult(){
-  // Display scores
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setCursor(0, 0);
-  tft.print("Team A: ");
-  tft.print(scoreTeamA);
-  tft.setCursor(0, 30);
-  tft.print("Team B: ");
-  tft.print(scoreTeamB);
-
-  // Wait for a while before next round
-  delay(2000);
-  
-  // Reset answers for next round
-  answerTeamA = false;
-  answerTeamB = false;
-
-  // Increment round counter
-  roundCounter++;
-}
-// =============================
-
-// =============================
-// 🔄 Main Loop
-// =============================
 void loop() {
 
   switch (gameState) {
@@ -498,7 +451,6 @@ void loop() {
   static bool drawn = false;
   static unsigned long buttonPressStart = 0;
   static bool buttonHeld = false;
-  // setEDGreen();
   
   LedWaitStart();
   if (!drawn) {
@@ -559,7 +511,6 @@ case WAIT_ANSWER:
 
     case SHOW_RESULT:
       // Store if answers matched for this round
-      // answersMatched[roundCounter] = (answerTeamA == answerTeamB);
       tft.fillScreen(ILI9341_BLACK);
       delay(500); // Short pause for display update
         answerTeamA = false; // Reset answers for next round
